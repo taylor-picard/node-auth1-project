@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
 const Users = require('../users/users-model');
 const {
   checkPasswordLength,
@@ -19,18 +19,36 @@ checkUsernameFree, (req, res, next)=> {
     .catch(next)
 })
 router.post('/login', 
-checkPasswordLength,
 checkUsernameExists, (req, res, next)=> {
-  Users.findBy(req.body)
-    .then(() => {
-      res.status(200).json({
-        message: `Welcome ${req.body.username}!`
+  const {username, password} = req.body
+  if(bcrypt.compareSync(password, req.user.password)) {
+    req.session.user = req.user
+    res.status(200).json({
+        message: `Welcome ${username}!`
       })
+  } else{
+    res.status(401).json({
+      message: "Invalid credentials"
     })
-    .catch(next)
+    next()
+  }
 })
 router.get('/logout', (req, res, next)=> {
-  next()
+  if(req.session.user){
+    req.session.destroy(err => {
+      if(err){
+        next(err)
+      }else{
+        res.status(200).json({
+          message: "logged out"
+        })
+      }
+    })
+  }else{
+    res.status(200).json({
+      message: "no session"
+    })
+  }
 })
 
 router.use('*', (req, res)=> {
@@ -41,6 +59,7 @@ router.use((err, req, res, next)=> {
       message: err.message
   })
 })
+
 /**
   1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
 
@@ -96,8 +115,7 @@ router.use((err, req, res, next)=> {
   {
     "message": "no session"
   }
- */
+*/
 
- 
-// Don't forget to add the router to the `exports` object so it can be required in other modules
+
 module.exports = router;
