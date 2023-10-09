@@ -6,7 +6,9 @@ const {
   checkUsernameFree
 } = require('./auth-middleware');
 
-router.post('/register', (req, res, next)=> {
+router.post('/register', 
+checkPasswordLength,
+checkUsernameFree, (req, res, next)=> {
   const newUser = Users.add(req.body)
     .then(() => {
       res.status(200).json({
@@ -16,17 +18,19 @@ router.post('/register', (req, res, next)=> {
     })
     .catch(next)
 })
-router.post('/login', (req, res, next)=> {
+router.post('/login', 
+checkPasswordLength,
+checkUsernameExists, (req, res, next)=> {
   Users.findBy(req.body)
     .then(() => {
       res.status(200).json({
-        message: "Welcome sue!"
+        message: `Welcome ${req.body.username}!`
       })
     })
     .catch(next)
 })
 router.get('/logout', (req, res, next)=> {
-
+  next()
 })
 
 router.use('*', (req, res)=> {
