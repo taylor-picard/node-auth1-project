@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const bcrypt = require('bcryptjs')
 const Users = require('../users/users-model');
 const {
   checkPasswordLength,
@@ -9,12 +10,11 @@ const {
 router.post('/register', 
 checkPasswordLength,
 checkUsernameFree, (req, res, next)=> {
-  const newUser = Users.add(req.body)
-    .then(() => {
-      res.status(200).json({
-        "user_id": newUser.user_id,
-        "username": newUser.username
-      })
+  const {username, password} = req.body
+  const hash = bcrypt.hashSync(password, 8)
+  Users.add({username, password: hash})
+    .then(newUser => {
+      res.status(200).json(newUser)
     })
     .catch(next)
 })
